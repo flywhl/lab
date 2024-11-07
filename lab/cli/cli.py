@@ -1,31 +1,35 @@
 from typing import Callable, Optional
-from cyclopts import App
+import typer
 import yaml
 from lab.model.experiment.experiment import Experiment
-
 from lab.model.spec.network import Spec
-
-
 from lab.model.util import Vary
 from lab.settings import Settings
 from tests.model.spec import func
 
-lab = App(name="lab")
-exp_parent_app = App(name="exp")
+app = typer.Typer()
+exp_app = typer.Typer()
+app.add_typer(exp_app, name="exp")
 
-lab.command(exp_parent_app)
 
-
+# Create sub-apps for each registered experiment
+experiment_apps = {}
 for name, exp in Experiment.get_registered_experiments().items():
-    exp_app = App(name=name)
-    exp_parent_app.command(exp_app)
+    experiment_apps[name] = typer.Typer()
+    exp_app.add_typer(experiment_apps[name], name=name)
 
-    @exp_app.command()
-    def run(spec: str, vary: Optional[str] = None, K: int = 1):
+    @experiment_apps[name].command("run")
+    def run_experiment(
+        exp=exp,  # Capture experiment class in closure
+        spec: str = typer.Argument(..., help="Specification file name"),
+        vary: Optional[str] = typer.Option(None, help="Variation parameter"),
+        k: int = typer.Option(1, "--K", "-K", help="Number of iterations"),
+    ):
+        """Run an experiment with the given specification"""
         vary_ = Vary.parse_str(vary) if vary else None
         spec_class = exp.spec()
         if not spec_class or not issubclass(spec_class, Spec):
-            raise ValueError(f"Experiment {exp} does not have a valid Spec class")
+            raise typer.BadParameter(f"Experiment {exp} does not have a valid Spec class")
 
         settings = Settings()
         namespaces = {Callable: func}
@@ -37,7 +41,7 @@ for name, exp in Experiment.get_registered_experiments().items():
             yaml.safe_load(specfile.read_text()), namespaces
         )
         experiment = experiment_spec.build()
-        data = experiment(K=K, vary=vary_)
+        data = experiment(K=k, vary=vary_)
         data.plot()
 
 
@@ -74,4 +78,4 @@ for name, exp in Experiment.get_registered_experiments().items():
 
 
 def main():
-    lab()
+    app()
