@@ -12,7 +12,7 @@ class PipelineService:
     def __init__(self, experiment_service: ExperimentService) -> None:
         self._experiment_service = experiment_service
 
-    def _find_experiment_dependencies(self, experiment: Experiment) -> Set[str]:
+    def _find_experiment_dependencies(self, experiment: Experiment) -> Set[UUID]:
         """Extract all experiment IDs that this experiment depends on via ValueReferences."""
         dependencies = set()
 
@@ -26,10 +26,10 @@ class PipelineService:
     def _validate_no_cycles(
         self,
         exp_id: UUID,
-        visited: Set[str],
-        path: Set[str],
-        graph: Dict[str, Set[str]],
-        exp_map: Dict[str, Experiment],
+        visited: Set[UUID],
+        path: Set[UUID],
+        graph: Dict[UUID, Set[UUID]],
+        exp_map: Dict[UUID, Experiment],
     ) -> None:
         """
         Detect cycles in the experiment dependency graph using DFS.
@@ -65,7 +65,7 @@ class PipelineService:
             graph[experiment.id].update(self._find_experiment_dependencies(experiment))
 
         # Validate no cycles exist
-        visited: Set[str] = set()
+        visited: Set[UUID] = set()
         for experiment in experimentes:
             if experiment.id not in visited:
                 self._validate_no_cycles(experiment.id, visited, set(), graph, exp_map)
@@ -74,7 +74,7 @@ class PipelineService:
         ordered: List[Experiment] = []
         visited = set()
 
-        def visit(exp_id: str) -> None:
+        def visit(exp_id: UUID) -> None:
             if exp_id in visited:
                 return
             visited.add(exp_id)
