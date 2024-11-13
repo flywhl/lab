@@ -1,5 +1,6 @@
 from typing import Sequence, Set, Dict, List, Tuple
 from collections import defaultdict
+from uuid import UUID
 from lab.model.pipeline import Pipeline
 from lab.model.project import Experiment, Project, ValueReference
 from lab.service.experiment import ExperimentService
@@ -24,7 +25,7 @@ class PipelineService:
 
     def _validate_no_cycles(
         self,
-        exp_id: str,
+        exp_id: UUID,
         visited: Set[str],
         path: Set[str],
         graph: Dict[str, Set[str]],
@@ -57,9 +58,9 @@ class PipelineService:
         """
         # Create experiment ID mapping
         exp_map = {exp.id: exp for exp in experimentes}
-        
+
         # Build dependency graph
-        graph: Dict[str, Set[str]] = defaultdict(set)
+        graph: Dict[UUID, Set[str]] = defaultdict(set)
         for experiment in experimentes:
             graph[experiment.id].update(self._find_experiment_dependencies(experiment))
 
@@ -120,4 +121,3 @@ class PipelineService:
         """
         for exp in pipeline.experiments:
             self._experiment_service.run(exp)
-
