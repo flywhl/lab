@@ -24,12 +24,17 @@ fonttools==4.54.1
     # via matplotlib
 fsspec==2024.10.0
     # via torch
+iniconfig==2.0.0
+    # via pytest
 jinja2==3.1.4
     # via torch
 kiwisolver==1.4.7
     # via matplotlib
+labfile @ git+https://github.com/flywheelhq/labfile@7253dc2bf222c0d36752016ecfcfb0d4fcf0cb6c
+    # via lab
 lark==1.2.2
     # via lab
+    # via labfile
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -49,21 +54,28 @@ numpy==2.1.3
     # via termplotlib
 packaging==24.1
     # via matplotlib
+    # via pytest
 pillow==11.0.0
     # via matplotlib
+pluggy==1.5.0
+    # via pytest
 polars==1.12.0
     # via lab
 pydantic==2.9.2
     # via lab
+    # via labfile
     # via pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.6.1
     # via lab
+    # via labfile
 pygments==2.18.0
     # via rich
 pyparsing==3.2.0
     # via matplotlib
+pytest==8.3.3
+    # via wireup
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-dotenv==1.0.1
@@ -90,3 +102,5 @@ typing-extensions==4.12.2
     # via pydantic-core
     # via torch
     # via typer
+wireup==0.12.0
+    # via lab

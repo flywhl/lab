@@ -47,8 +47,11 @@ jinja2==3.1.4
     # via torch
 kiwisolver==1.4.7
     # via matplotlib
+labfile @ git+https://github.com/flywheelhq/labfile@7253dc2bf222c0d36752016ecfcfb0d4fcf0cb6c
+    # via lab
 lark==1.2.2
     # via lab
+    # via labfile
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -93,11 +96,13 @@ polars==1.12.0
 pre-commit==4.0.1
 pydantic==2.9.2
     # via lab
+    # via labfile
     # via pydantic-settings
 pydantic-core==2.23.4
     # via pydantic
 pydantic-settings==2.6.1
     # via lab
+    # via labfile
 pygments==2.18.0
     # via rich
 pyparsing==3.2.0
@@ -106,6 +111,7 @@ pyproject-api==1.8.0
     # via tox
 pyright==1.1.388
 pytest==8.3.3
+    # via wireup
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-dotenv==1.0.1
@@ -139,3 +145,5 @@ typing-extensions==4.12.2
 virtualenv==20.27.1
     # via pre-commit
     # via tox
+wireup==0.12.0
+    # via lab

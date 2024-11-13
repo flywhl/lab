@@ -29,7 +29,7 @@ class PipelineService:
         visited: Set[UUID],
         path: Set[UUID],
         graph: Dict[UUID, Set[Experiment]],
-        experimentes: Sequence[Experiment],
+        experiments: Sequence[Experiment],
     ) -> None:
         """
         Detect cycles in the experiment dependency graph using DFS.
@@ -41,14 +41,14 @@ class PipelineService:
         for dependency in graph[experiment.id]:
             if dependency.id in path:
                 cycle = " -> ".join(
-                    next(exp.name for exp in experimentes if exp.id == exp_id)
+                    next(exp.name for exp in experiments if exp.id == exp_id)
                     for exp_id in path
                 )
                 raise ValueError(
                     f"Circular dependency detected: {cycle} -> {dependency.name}"
                 )
             if dependency.id not in visited:
-                self._validate_no_cycles(dependency, visited, path, graph)
+                self._validate_no_cycles(dependency, visited, path, graph, experiments)
 
         path.remove(experiment.id)
 
@@ -68,7 +68,9 @@ class PipelineService:
         visited: Set[UUID] = set()
         for experiment in experimentes:
             if experiment.id not in visited:
-                self._validate_no_cycles(experiment, visited, set(), graph, experimentes)
+                self._validate_no_cycles(
+                    experiment, visited, set(), graph, experimentes
+                )
 
         # Perform topological sort
         ordered: List[Experiment] = []

@@ -16,15 +16,12 @@ class LabfileService(Service):
 
     def _labfile_from_tree(self, tree: LabfileNode) -> Project:
         # Create intermediate definitions
-        definitions = [
-            ExperimentDefinition(name=exp.name, path=exp.path)
-            for exp in tree.experiments
-        ]
-        
+        processes = [ExperimentDefinition.from_tree(node) for node in tree.processes]
+
         # Build symbol table
-        symbols = SymbolTable(table={d.name: d for d in definitions})
-        
+        symbols = SymbolTable(table={d.name: d for d in processes})
+
         # Convert to domain objects
-        experiments = [d.to_domain(symbols) for d in definitions]
-        
-        return Project(experiments=experiments)
+        processes = [d.to_domain(symbols) for d in processes]
+
+        return Project(experiments=processes)
