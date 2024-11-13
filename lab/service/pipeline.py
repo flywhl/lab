@@ -1,4 +1,4 @@
-from typing import Sequence, Set, Dict, List
+from typing import Sequence, Set, Dict, List, Tuple
 from collections import defaultdict
 from lab.model.pipeline import Pipeline
 from lab.model.project import Experiment, Project, ValueReference
@@ -11,41 +11,42 @@ class PipelineService:
     def __init__(self, experiment_service: ExperimentService) -> None:
         self._experiment_service = experiment_service
 
-    def _find_experiment_dependencies(self, experiment: Experiment) -> Set[Experiment]:
-        """Extract all experiment resources that this experiment depends on via ValueReferences."""
+    def _find_experiment_dependencies(self, experiment: Experiment) -> Set[str]:
+        """Extract all experiment IDs that this experiment depends on via ValueReferences."""
         dependencies = set()
 
         for value in experiment.parameters.values():
             if isinstance(value, ValueReference):
                 if isinstance(value.owner, Experiment):
-                    dependencies.add(value.owner)
+                    dependencies.add(value.owner.id)
 
         return dependencies
 
     def _validate_no_cycles(
         self,
-        experiment: Experiment,
-        visited: Set[Experiment],
-        path: Set[Experiment],
-        graph: Dict[Experiment, Set[Experiment]],
+        exp_id: str,
+        visited: Set[str],
+        path: Set[str],
+        graph: Dict[str, Set[str]],
+        exp_map: Dict[str, Experiment],
     ) -> None:
         """
         Detect cycles in the experiment dependency graph using DFS.
         Raises ValueError if a cycle is found.
         """
-        path.add(experiment)
-        visited.add(experiment)
+        path.add(exp_id)
+        visited.add(exp_id)
 
-        for dependency in graph[experiment]:
-            if dependency in path:
-                cycle = " -> ".join(p.name for p in path)
+        for dep_id in graph[exp_id]:
+            if dep_id in path:
+                cycle = " -> ".join(exp_map[p].name for p in path)
                 raise ValueError(
-                    f"Circular dependency detected: {cycle} -> {dependency.name}"
+                    f"Circular dependency detected: {cycle} -> {exp_map[dep_id].name}"
                 )
-            if dependency not in visited:
-                self._validate_no_cycles(dependency, visited, path, graph)
+            if dep_id not in visited:
+                self._validate_no_cycles(dep_id, visited, path, graph, exp_map)
 
-        path.remove(experiment)
+        path.remove(exp_id)
 
     def _order_experimentes(
         self, experimentes: Sequence[Experiment]
@@ -54,33 +55,36 @@ class PipelineService:
         Order experimentes based on their dependencies using topological sort.
         Raises ValueError if circular dependencies are detected.
         """
+        # Create experiment ID mapping
+        exp_map = {exp.id: exp for exp in experimentes}
+        
         # Build dependency graph
-        graph: Dict[Experiment, Set[Experiment]] = defaultdict(set)
+        graph: Dict[str, Set[str]] = defaultdict(set)
         for experiment in experimentes:
-            graph[experiment].update(self._find_experiment_dependencies(experiment))
+            graph[experiment.id].update(self._find_experiment_dependencies(experiment))
 
         # Validate no cycles exist
-        visited: Set[Experiment] = set()
+        visited: Set[str] = set()
         for experiment in experimentes:
-            if experiment not in visited:
-                self._validate_no_cycles(experiment, visited, set(), graph)
+            if experiment.id not in visited:
+                self._validate_no_cycles(experiment.id, visited, set(), graph, exp_map)
 
         # Perform topological sort
         ordered: List[Experiment] = []
         visited = set()
 
-        def visit(experiment: Experiment) -> None:
-            if experiment in visited:
+        def visit(exp_id: str) -> None:
+            if exp_id in visited:
                 return
-            visited.add(experiment)
+            visited.add(exp_id)
 
-            for dependency in graph[experiment]:
-                visit(dependency)
+            for dependency_id in graph[exp_id]:
+                visit(dependency_id)
 
-            ordered.append(experiment)
+            ordered.append(exp_map[exp_id])
 
         for experiment in experimentes:
-            visit(experiment)
+            visit(experiment.id)
 
         return ordered
 
