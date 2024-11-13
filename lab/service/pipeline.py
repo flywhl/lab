@@ -29,6 +29,7 @@ class PipelineService:
         visited: Set[UUID],
         path: Set[UUID],
         graph: Dict[UUID, Set[Experiment]],
+        experimentes: Sequence[Experiment],
     ) -> None:
         """
         Detect cycles in the experiment dependency graph using DFS.
@@ -67,7 +68,7 @@ class PipelineService:
         visited: Set[UUID] = set()
         for experiment in experimentes:
             if experiment.id not in visited:
-                self._validate_no_cycles(experiment, visited, set(), graph)
+                self._validate_no_cycles(experiment, visited, set(), graph, experimentes)
 
         # Perform topological sort
         ordered: List[Experiment] = []
