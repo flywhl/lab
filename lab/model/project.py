@@ -40,6 +40,14 @@ class Experiment(Model):
     # parameters: Parameters
     # instruments: list[Instrument]
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Experiment):
+            return NotImplemented
+        return self.id == other.id
+
 
 class Project(Model):
     experiments: list[Experiment]
