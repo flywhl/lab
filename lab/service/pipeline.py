@@ -40,7 +40,7 @@ class PipelineService:
         for dependency in graph[experiment.id]:
             if dependency.id in path:
                 cycle = " -> ".join(
-                    next(exp.name for exp in graph.values() if exp_id in {e.id for e in exp})
+                    next(exp.name for exp in experimentes if exp.id == exp_id)
                     for exp_id in path
                 )
                 raise ValueError(
