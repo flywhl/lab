@@ -1,0 +1,49 @@
+[project]
+name = "lab"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Rory Byrne", email = "rory@rory.bio" }
+]
+dependencies = [
+    "lark>=1.1.9",
+    "pydantic>=2.8.2",
+    "torch>=2.5.1",
+    "rich>=13.7.1",
+    "pydantic-settings>=2.4.0",
+    "polars>=1.4.1",
+    "numpy>=2.0.1",
+    "pyyaml>=6.0.2",
+    "termplotlib>=0.3.9",
+    "matplotlib>=3.9.2",
+    "typer>=0.12.5",
+    "labfile @ git+https://github.com/flywheelhq/labfile@dev",
+    "wireup>=0.12.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+lab = "lab.cli.cli:main"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "coverage>=7.6.7",
+    "pre-commit>=4.0.1",
+    "tox>=4.17.0",
+    "pyright>=1.1.375",
+    "black>=24.8.0",
+    "ruff>=0.5.6",
+    "pytest>=8.3.2",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["lab"]
