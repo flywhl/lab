@@ -5,11 +5,9 @@ from labfile.parse.transform import ProcessNode
 from pydantic import BaseModel
 from uuid import uuid4
 
-from lab.model.project import Project, Experiment, ValueReference
+from lab.model.project import Experiment, ValueReference
 from labfile.model.tree import (
-    LabfileNode,
     ReferenceNode,
-    ResourceNode,
     LiteralValue as TreeLiteralValue,
 )
 

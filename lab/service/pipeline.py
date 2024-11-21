@@ -1,8 +1,8 @@
-from typing import Sequence, Set, Dict, List, Tuple
+from typing import Sequence, Set, Dict, List
 from collections import defaultdict
 from uuid import UUID
 from lab.model.pipeline import Pipeline
-from lab.model.project import Experiment, Project, ValueReference
+from lab.model.project import Experiment, Project
 from lab.service.experiment import ExperimentService
 
 
@@ -12,16 +12,37 @@ class PipelineService:
     def __init__(self, experiment_service: ExperimentService) -> None:
         self._experiment_service = experiment_service
 
-    def _find_experiment_dependencies(self, experiment: Experiment) -> Set[Experiment]:
-        """Extract all experiments that this experiment depends on via ValueReferences."""
-        dependencies = set()
+    ### PUBLIC ##############
 
-        for value in experiment.parameters.values():
-            if isinstance(value, ValueReference):
-                if isinstance(value.owner, Experiment):
-                    dependencies.add(value.owner)
+    def create_pipeline(self, labfile: Project) -> Pipeline:
+        """Create a Pipeline from a Labfile, with experimentes ordered by dependencies.
 
-        return dependencies
+        Args:
+            labfile: The input Labfile containing experimentes, providers, and datasets
+
+        Returns:
+            A Pipeline with ordered experiments ready for execution
+
+        Raises:
+            ValueError: If circular dependencies are detected between experimentes
+        """
+        ordered_experiments = self._order_experiments(labfile.experiments)
+
+        # Create experiments from ordered experimentes
+        return Pipeline(
+            experiments=ordered_experiments,
+        )
+
+    def run(self, pipeline: Pipeline) -> None:
+        """Execute all experiments in the pipeline in dependency order.
+
+        Args:
+            pipeline: The pipeline to execute
+        """
+        for exp in pipeline.experiments:
+            self._experiment_service.run(exp)
+
+    ### PRIVATE #############
 
     def _validate_no_cycles(
         self,
@@ -31,8 +52,8 @@ class PipelineService:
         graph: Dict[UUID, Set[Experiment]],
         experiments: Sequence[Experiment],
     ) -> None:
-        """
-        Detect cycles in the experiment dependency graph using DFS.
+        """Detect cycles in the experiment dependency graph using DFS.
+
         Raises ValueError if a cycle is found.
         """
         path.add(experiment.id)
@@ -52,17 +73,17 @@ class PipelineService:
 
         path.remove(experiment.id)
 
-    def _order_experimentes(
+    def _order_experiments(
         self, experimentes: Sequence[Experiment]
     ) -> List[Experiment]:
-        """
-        Order experimentes based on their dependencies using topological sort.
+        """Order experimentes based on their dependencies using topological sort.
+
         Raises ValueError if circular dependencies are detected.
         """
         # Build dependency graph
         graph: Dict[UUID, Set[Experiment]] = defaultdict(set)
         for experiment in experimentes:
-            graph[experiment.id].update(self._find_experiment_dependencies(experiment))
+            graph[experiment.id].update(experiment.dependencies)
 
         # Validate no cycles exist
         visited: Set[UUID] = set()
@@ -90,36 +111,3 @@ class PipelineService:
             visit(experiment)
 
         return ordered
-
-    def create_pipeline(self, labfile: Project) -> Pipeline:
-        """
-        Create a Pipeline from a Labfile, with experimentes ordered by dependencies.
-
-        Args:
-            labfile: The input Labfile containing experimentes, providers, and datasets
-
-        Returns:
-            A Pipeline with ordered experiments ready for execution
-
-        Raises:
-            ValueError: If circular dependencies are detected between experimentes
-        """
-        ordered_experiments = self._order_experimentes(labfile.experiments)
-
-        # Create experiments from ordered experimentes
-        # (assuming Pipeline model accepts a list of experimentes or experiments)
-        return Pipeline(
-            experiments=ordered_experiments,
-            # providers=labfile.providers,
-            # datasets=labfile.datasets,
-        )
-
-    def run(self, pipeline: Pipeline) -> None:
-        """
-        Execute all experiments in the pipeline in dependency order.
-
-        Args:
-            pipeline: The pipeline to execute
-        """
-        for exp in pipeline.experiments:
-            self._experiment_service.run(exp)
