@@ -1,9 +1,10 @@
 from typing import Sequence, Set, Dict, List
 from collections import defaultdict
 from uuid import UUID
-from lab.model.pipeline import Pipeline
-from lab.model.project import Experiment, Project
-from lab.service.experiment import ExperimentService
+
+from lab.project.model.project import Experiment, Project
+from lab.project.service.experiment import ExperimentService
+from lab.runtime.model.pipeline import Pipeline
 
 
 class PipelineService:

@@ -1,9 +1,9 @@
 import rich
-from lab.model.pipeline import Pipeline
-from lab.model.project import Experiment
+from lab.core.service import Service
+from lab.project.model.project import Experiment
 
 
-class ExperimentService:
+class ExperimentService(Service):
     def run(self, experiment: Experiment):
         """Run an experiment
 
