@@ -1,13 +1,13 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Self
 from uuid import UUID, uuid4
 
 from pydantic import Field
 
 from lab.core.model import Event, Model
+from lab.project.model.project import Experiment, Project
 from lab.runtime.model.execution import ExecutionContext
-from lab.runtime.model.project import Experiment, Project
 
 
 class RunStatus(str, Enum):

@@ -8,8 +8,9 @@ from lab.runtime.model.run import ExperimentRun, ProjectRun, RunStatus
 class RunRepository:
     """Persistent storage for run data"""
 
-    def __init__(self, db: Database):  # Some DB abstraction
-        self._db = db
+    def __init__(self):  # Some DB abstraction
+        ...
+        # self._db = db
 
     async def save_project_run(self, run: ProjectRun) -> None: ...
     async def save_experiment_run(self, run: ExperimentRun) -> None: ...

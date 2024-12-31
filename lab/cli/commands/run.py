@@ -3,17 +3,21 @@ from typing import Annotated
 import rich
 import typer
 
+from lab.project.service.labfile import LabfileService
+from lab.runtime.model.run import ExecutionPlan
+from lab.runtime.persistence.run import RunRepository
+from lab.runtime.service.run import RunService
+
 
 def run(path: Annotated[Path, typer.Argument(help="Path to Labfile")]):
     rich.print(f"Running [b]{path.resolve()}[/b]\n")
     labfile_service = LabfileService()
-    project = labfile_service.parse(path)
+    plan = labfile_service.parse(path)
 
-    experiment_service = ExperimentService()
-    pipeline_service = PipelineService(experiment_service=experiment_service)
-
-    pipeline = pipeline_service.create_pipeline(project)
-    pipeline_service.run(pipeline)
+    db = make_db()
+    run_repo = RunRepository(db=db)
+    run_service = RunService(repository=run_repo)
+    run_service.execute(runtime_plan)
 
 
 def attach(app: typer.Typer, *, name: str):

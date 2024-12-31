@@ -4,8 +4,8 @@ from datetime import datetime
 from uuid import UUID
 
 from lab.core.model import Event
+from lab.project.model.project import Experiment
 from lab.runtime.model.execution import ExecutionContext
-from lab.runtime.model.project import Experiment
 from lab.runtime.persistence.run import RunRepository
 from lab.runtime.model.run import (
     ExecutionPlan,
@@ -23,6 +23,8 @@ class RunService:
     def __init__(self, repository: RunRepository):
         self._repository = repository
         self._subscribers: list[Callable[[Event], None]] = []
+
+    async def execute(self, plan: ExecutionPlan): ...
 
     async def project_run_started(self, plan: ExecutionPlan) -> ProjectRun:
         """Start tracking a new pipeline run"""

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Protocol
+from typing import Any, Callable
 
 from pydantic import Field
 

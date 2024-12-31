@@ -1,6 +1,6 @@
 from pathlib import Path
+from lab.project.model.project import Experiment, Project
 from lab.runtime.model.execution import ExecutionContext
-from lab.runtime.model.project import Experiment, Project
 from lab.runtime.model.run import (
     ExecutionPlan,
     ProjectRun,
@@ -44,7 +44,7 @@ class Runtime:
             raise
 
     def _should_continue(
-        self, failed_experiment: Experiment, project: Project, error: Exception
+        self, failed_experiment: Experiment, project: Project, _: Exception
     ) -> bool:
         """
         Determines how to proceed when an experiment fails.
