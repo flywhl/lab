@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Optional, TypeVar, Union, Any
 from labfile.parse.transform import ProcessNode
 from pydantic import BaseModel

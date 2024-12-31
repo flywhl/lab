@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Self
+from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import Field
@@ -43,12 +43,6 @@ class ExperimentRun(Model):
     error: Optional[str] = None  # Changed from Exception for serialization
     # metrics: list[ExecutionMetrics] = Field(default_factory=list)
     # instrument_metrics: list[InstrumentMetric] = Field(default_factory=list)
-
-
-class ExecutionPlan(Model):
-    id: UUID = Field(default_factory=uuid4)
-    project: Project
-    ordered_experiments: list[Experiment]
 
 
 class ProjectRun(Model):

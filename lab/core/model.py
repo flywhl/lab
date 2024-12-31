@@ -1,10 +1,9 @@
 from datetime import datetime
 from typing import Any
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
-class Model(BaseModel):
-    model_config = ConfigDict(frozen=True)
+class Model(BaseModel): ...
 
 
 class Event(Model):

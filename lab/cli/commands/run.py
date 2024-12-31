@@ -4,20 +4,30 @@ import rich
 import typer
 
 from lab.project.service.labfile import LabfileService
-from lab.runtime.model.run import ExecutionPlan
-from lab.runtime.persistence.run import RunRepository
+from lab.project.service.plan import PlanService
+from lab.runtime.persistence.memory import (
+    InMemoryExperimentRunRepository,
+    InMemoryProjectRunRepository,
+)
+from lab.runtime.runtime import Runtime
 from lab.runtime.service.run import RunService
 
 
-def run(path: Annotated[Path, typer.Argument(help="Path to Labfile")]):
+async def run(path: Annotated[Path, typer.Argument(help="Path to Labfile")]):
     rich.print(f"Running [b]{path.resolve()}[/b]\n")
     labfile_service = LabfileService()
-    plan = labfile_service.parse(path)
+    project_run_repo = InMemoryProjectRunRepository()
+    experiment_run_repo = InMemoryExperimentRunRepository()
+    run_service = RunService(
+        project_run_repo=project_run_repo, experiment_run_repo=experiment_run_repo
+    )
+    runtime = Runtime(run_service=run_service)
+    plan_service = PlanService()
 
-    db = make_db()
-    run_repo = RunRepository(db=db)
-    run_service = RunService(repository=run_repo)
-    run_service.execute(runtime_plan)
+    project = labfile_service.parse(path)
+    plan = plan_service.create_execution_plan(project)
+
+    await runtime.start(plan)
 
 
 def attach(app: typer.Typer, *, name: str):

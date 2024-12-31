@@ -4,52 +4,44 @@ from datetime import datetime
 from uuid import UUID
 
 from lab.core.model import Event
-from lab.project.model.project import Experiment
 from lab.runtime.model.execution import ExecutionContext
-from lab.runtime.persistence.run import RunRepository
 from lab.runtime.model.run import (
-    ExecutionPlan,
     ExperimentRun,
     ExperimentRunEvent,
     ProjectRun,
     ProjectRunEvent,
     RunStatus,
 )
+from lab.runtime.persistence.run import ExperimentRunRepository, ProjectRunRepository
 
 
 class RunService:
     """Service for managing experiment runs"""
 
-    def __init__(self, repository: RunRepository):
-        self._repository = repository
+    def __init__(
+        self,
+        project_run_repo: ProjectRunRepository,
+        experiment_run_repo: ExperimentRunRepository,
+    ):
+        self._project_run_repo = project_run_repo
+        self._experiment_run_repo = experiment_run_repo
         self._subscribers: list[Callable[[Event], None]] = []
 
-    async def execute(self, plan: ExecutionPlan): ...
-
-    async def project_run_started(self, plan: ExecutionPlan) -> ProjectRun:
+    async def project_run_started(self, run: ProjectRun) -> None:
         """Start tracking a new pipeline run"""
-        project_run = ProjectRun(status=RunStatus.RUNNING, project=plan.project)
-        await self._repository.save_project_run(project_run)
-        await self._emit_event(
-            ProjectRunEvent(run=project_run, kind="PIPELINE_STARTED")
-        )
-        return project_run
+        await self._project_run_repo.save(run)
+        await self._emit_event(ProjectRunEvent(run=run, kind="PIPELINE_STARTED"))
 
     async def experiment_run_started(
         self,
-        project_run: ProjectRun,
-        experiment: Experiment,
+        run: ExperimentRun,
         context: ExecutionContext,
     ) -> ExperimentRun:
         """Start tracking a new experiment run"""
-        run = ExperimentRun(
-            experiment=experiment,
-            context=context,
-            status=RunStatus.RUNNING,
-            project_run=project_run,
-        )
-        project_run.experiment_runs.append(run)
-        await self._repository.save_project_run(project_run)
+        run.project_run.experiment_runs.append(run)
+        # @todo(rory): do we have to save both, or will sqlalchemy do it recursively?
+        await self._project_run_repo.save(run.project_run)
+        await self._experiment_run_repo.save(run)
         await self._emit_event(ExperimentRunEvent(run=run, kind="EXPERIMENT_STARTED"))
         return run
 
@@ -62,7 +54,7 @@ class RunService:
         run.completed_at = datetime.now()
         # run.metrics = metrics
         # run.experiment_data = data
-        await self._repository.save_experiment_run(run)
+        await self._experiment_run_repo.save(run)
         await self._emit_event(ExperimentRunEvent(run=run, kind="EXPERIMENT_COMPLETED"))
 
     async def experiment_run_failed(self, run: ExperimentRun, error: str) -> None:
@@ -70,7 +62,7 @@ class RunService:
         run.status = RunStatus.FAILED
         run.completed_at = datetime.now()
         run.error = error
-        await self._repository.save_experiment_run(run)
+        await self._experiment_run_repo.save(run)
         await self._emit_event(
             ExperimentRunEvent(run=run, kind="EXPERIMENT_FAILED", data={"error": error})
         )
@@ -80,7 +72,7 @@ class RunService:
         run.status = RunStatus.FAILED
         run.completed_at = datetime.now()
         run.error = error
-        await self._repository.save_project_run(run)
+        await self._project_run_repo.save(run)
         await self._emit_event(
             ProjectRunEvent(run=run, kind="PROJECT_FAILED", data={"error": error})
         )
@@ -89,22 +81,22 @@ class RunService:
         """Mark pipeline as completed"""
         project_run.status = RunStatus.COMPLETED
         project_run.completed_at = datetime.now()
-        await self._repository.save_project_run(project_run)
+        await self._project_run_repo.save(project_run)
         await self._emit_event(
             ProjectRunEvent(run=project_run, kind="PROJECT_COMPLETED")
         )
 
     # Query methods
     async def get_project_run(self, id: UUID) -> Optional[ProjectRun]:
-        return await self._repository.get_project_run(id)
+        return await self._project_run_repo.get(id)
 
     async def get_experiment_run(self, id: UUID) -> Optional[ExperimentRun]:
-        return await self._repository.get_experiment_run(id)
+        return await self._experiment_run_repo.get(id)
 
     async def list_project_runs(
         self, status: Optional[RunStatus] = None, since: Optional[datetime] = None
     ) -> list[ProjectRun]:
-        return await self._repository.list_project_runs(status, since)
+        return await self._project_run_repo.list(status, since)
 
     # Event handling
     def subscribe(self, callback: Callable[[Event], None]) -> None:

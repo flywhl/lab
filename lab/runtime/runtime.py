@@ -1,36 +1,41 @@
 from pathlib import Path
+from lab.project.model.plan import ExecutionPlan
 from lab.project.model.project import Experiment, Project
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
-    ExecutionPlan,
+    ExperimentRun,
     ProjectRun,
+    RunStatus,
 )
-from lab.runtime.orchestrator import Orchestrator
 from lab.runtime.service.run import RunService
 
 
 class Runtime:
-    def __init__(self, run_service: RunService, orchestrator: Orchestrator):
+    def __init__(self, run_service: RunService):
         self._run_service = run_service
-        self._orchestrator = orchestrator
 
     async def start(self, plan: ExecutionPlan) -> ProjectRun:
-        project_run = await self._run_service.project_run_started(plan)
+        project_run = ProjectRun(status=RunStatus.RUNNING, project=plan.project)
+        await self._run_service.project_run_started(project_run)
 
         try:
-            # Let the orchestrator determine the execution order
-
             for experiment in plan.ordered_experiments:
                 context = await self._create_execution_context(experiment)
-                run = await self._run_service.experiment_run_started(
-                    project_run, experiment, context
+                experiment_run = ExperimentRun(
+                    experiment=experiment,
+                    context=context,
+                    status=RunStatus.RUNNING,
+                    project_run=project_run,
                 )
+                await self._run_service.experiment_run_started(experiment_run, context)
 
                 try:
                     await experiment.execution_method.run(context)
-                    await self._run_service.experiment_run_completed(run)
+                    await self._run_service.experiment_run_completed(experiment_run)
                 except Exception as e:
-                    await self._run_service.experiment_run_failed(run, str(e))
+                    await self._run_service.experiment_run_failed(
+                        experiment_run, str(e)
+                    )
 
                     # Let orchestrator decide how to handle failure
                     # @todo: design error handling for the runtime...

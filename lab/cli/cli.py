@@ -1,8 +1,7 @@
-import typer
-
 from lab.cli.commands import run, plan
+from lab.cli.utils import AsyncTyper
 
-app = typer.Typer()
+app = AsyncTyper()
 
 
 def main():
