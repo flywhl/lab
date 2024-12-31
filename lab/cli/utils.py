@@ -13,6 +13,11 @@ R = TypeVar("R")
 
 
 class AsyncTyper(Typer):
+    """Async support for Typer commands
+
+    @source: https://github.com/fastapi/typer/issues/950#issuecomment-2338225913
+    """
+
     @staticmethod
     def maybe_run_async(
         decorator: Callable[[CommandFunctionType], CommandFunctionType],
