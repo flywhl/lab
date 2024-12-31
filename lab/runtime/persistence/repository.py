@@ -19,27 +19,51 @@ class Repository(ABC, Generic[T]):
     @abstractmethod
     async def list(self, **filters) -> list[T]: ...
 
-class RunRepository(ABC):
-    """Repository interface for run data"""
+class ProjectRunRepository(Repository[ProjectRun]):
+    """Repository interface for project runs"""
     
     @abstractmethod
-    async def save_project_run(self, run: ProjectRun) -> None: ...
-    
-    @abstractmethod
-    async def save_experiment_run(self, run: ExperimentRun) -> None: ...
-    
-    @abstractmethod
-    async def get_project_run(self, id: UUID) -> Optional[ProjectRun]: ...
-    
-    @abstractmethod
-    async def get_experiment_run(self, id: UUID) -> Optional[ExperimentRun]: ...
-    
-    @abstractmethod
-    async def list_project_runs(
-        self, status: Optional[RunStatus] = None, since: Optional[datetime] = None
+    async def list(
+        self, 
+        status: Optional[RunStatus] = None, 
+        since: Optional[datetime] = None
     ) -> list[ProjectRun]: ...
+
+class ExperimentRunRepository(Repository[ExperimentRun]):
+    """Repository interface for experiment runs"""
     
     @abstractmethod
-    async def list_experiment_runs(
-        self, status: Optional[RunStatus] = None, since: Optional[datetime] = None
+    async def list(
+        self,
+        status: Optional[RunStatus] = None,
+        since: Optional[datetime] = None
     ) -> list[ExperimentRun]: ...
+
+class RunRepository(ProjectRunRepository, ExperimentRunRepository):
+    """Combined repository interface for both project and experiment runs"""
+    
+    async def save_project_run(self, run: ProjectRun) -> None:
+        await self.save(run)
+        
+    async def save_experiment_run(self, run: ExperimentRun) -> None:
+        await self.save(run)
+        
+    async def get_project_run(self, id: UUID) -> Optional[ProjectRun]:
+        return await self.get(id)
+        
+    async def get_experiment_run(self, id: UUID) -> Optional[ExperimentRun]:
+        return await self.get(id)
+        
+    async def list_project_runs(
+        self,
+        status: Optional[RunStatus] = None,
+        since: Optional[datetime] = None
+    ) -> list[ProjectRun]:
+        return await self.list(status=status, since=since)
+        
+    async def list_experiment_runs(
+        self,
+        status: Optional[RunStatus] = None,
+        since: Optional[datetime] = None
+    ) -> list[ExperimentRun]:
+        return await self.list(status=status, since=since)
