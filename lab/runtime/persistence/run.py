@@ -5,12 +5,13 @@ from uuid import UUID
 from sqlalchemy import Engine
 
 from lab.runtime.model.run import ExperimentRun, ProjectRun, RunStatus
+from lab.runtime.persistence.repository import RunRepository
 
 
-class RunRepository:
-    """Persistent storage for run data"""
+class SQLRunRepository(RunRepository):
+    """SQLAlchemy implementation of RunRepository"""
 
-    def __init__(self, db: Engine):  # Some DB abstraction
+    def __init__(self, db: Engine):
         self._db = db
 
     async def save_project_run(self, run: ProjectRun) -> None: ...
@@ -22,4 +23,4 @@ class RunRepository:
     ) -> list[ProjectRun]: ...
     async def list_experiment_runs(
         self, status: Optional[RunStatus] = None, since: Optional[datetime] = None
-    ) -> list[ProjectRun]: ...
+    ) -> list[ExperimentRun]: ...
