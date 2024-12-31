@@ -1,17 +1,11 @@
-from dataclasses import dataclass
 import networkx as nx
 
-from lab.project.model.project import Experiment, Project
-
-
-@dataclass
-class ExecutionPlan:
-    ordered_experiments: list[Experiment]
-    parallel_groups: list[set[Experiment]]
+from lab.runtime.model.project import Experiment, Project
+from lab.runtime.model.run import ExecutionPlan
 
 
 class Orchestrator:
-    def resolve_execution_order(self, project: Project) -> list[Experiment]:
+    def _resolve_execution_order(self, project: Project) -> list[Experiment]:
         """Determines the order experiments should be executed in based on dependencies"""
         # Build dependency graph
         graph = nx.DiGraph()
@@ -28,7 +22,7 @@ class Orchestrator:
         # Return topologically sorted order
         return list(nx.topological_sort(graph))
 
-    def handle_failure(
+    def should_continue(
         self, project: Project, failed_experiment: Experiment, error: Exception
     ) -> bool:
         """
@@ -49,7 +43,7 @@ class Orchestrator:
 
     def create_execution_plan(self, project: Project) -> ExecutionPlan:
         """Creates a plan for executing experiments, including parallel execution groups"""
-        ordered = self.resolve_execution_order(project)
+        ordered = self._resolve_execution_order(project)
 
         # Group independent experiments that can run in parallel
         # This is a simple implementation - could be more sophisticated
@@ -67,4 +61,4 @@ class Orchestrator:
         if current_group:
             parallel_groups.append(current_group)
 
-        return ExecutionPlan(ordered, parallel_groups)
+        return ExecutionPlan(ordered_experiments=ordered, project=project)

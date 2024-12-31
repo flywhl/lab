@@ -2,12 +2,12 @@ from pathlib import Path
 
 from labfile import parse
 from labfile.model.tree import LabfileNode
-from lab.model.project import Project
-from lab.service.service import Service
-from lab.service.ir import ExperimentDefinition, SymbolTable
+
+from lab.project.model.ir import ExperimentDefinition, SymbolTable
+from lab.project.model.project import Project
 
 
-class LabfileService(Service):
+class LabfileService:
     def parse(self, path: Path) -> Project:
         ast = parse(path)
         project = self._labfile_from_tree(ast)
@@ -22,6 +22,6 @@ class LabfileService(Service):
         symbols = SymbolTable(table={d.name: d for d in processes})
 
         # Convert to domain objects
-        processes = [d.to_domain(symbols) for d in processes]
+        processes = {d.to_domain(symbols) for d in processes}
 
         return Project(experiments=processes)

@@ -3,10 +3,6 @@ from typing import Annotated
 import rich
 import typer
 
-from lab.service.experiment import ExperimentService
-from lab.service.labfile import LabfileService
-from lab.service.pipeline import PipelineService
-
 
 def run(path: Annotated[Path, typer.Argument(help="Path to Labfile")]):
     rich.print(f"Running [b]{path.resolve()}[/b]\n")

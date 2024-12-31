@@ -5,7 +5,9 @@ from uuid import UUID, uuid4
 
 from pydantic import Field
 
-from lab.core.model import Model
+from lab.core.model import Event, Model
+from lab.runtime.model.execution import ExecutionContext
+from lab.runtime.model.project import Experiment, Project
 
 
 class RunStatus(str, Enum):
@@ -16,13 +18,16 @@ class RunStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class ExperimentRunEvent(Model):
+class ProjectRunEvent(Event):
     """Event emitted during run execution"""
 
-    timestamp: datetime = Field(default_factory=datetime.now)
+    run: "ProjectRun"
+
+
+class ExperimentRunEvent(Event):
+    """Event emitted during run execution"""
+
     run: "ExperimentRun"
-    event_type: str
-    data: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExperimentRun(Model):
@@ -30,18 +35,24 @@ class ExperimentRun(Model):
 
     id: UUID = Field(default_factory=uuid4)
     experiment: Experiment
-    pipeline_run: "PipelineRun"
+    project_run: "ProjectRun"
     context: ExecutionContext
     status: RunStatus = RunStatus.PENDING
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     error: Optional[str] = None  # Changed from Exception for serialization
-    metrics: list[ExecutionMetrics] = Field(default_factory=list)
-    instrument_metrics: list[InstrumentMetric] = Field(default_factory=list)
+    # metrics: list[ExecutionMetrics] = Field(default_factory=list)
+    # instrument_metrics: list[InstrumentMetric] = Field(default_factory=list)
 
 
-class PipelineRun(Model):
-    """A running instance of a pipeline"""
+class ExecutionPlan(Model):
+    id: UUID = Field(default_factory=uuid4)
+    project: Project
+    ordered_experiments: list[Experiment]
+
+
+class ProjectRun(Model):
+    """A running instance of a project"""
 
     id: UUID = Field(default_factory=uuid4)
     project: Project
@@ -49,3 +60,4 @@ class PipelineRun(Model):
     status: RunStatus = RunStatus.PENDING
     started_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
+    error: Optional[str] = None  # Changed from Exception for serialization

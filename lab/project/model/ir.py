@@ -5,11 +5,13 @@ from labfile.parse.transform import ProcessNode
 from pydantic import BaseModel
 from uuid import uuid4
 
-from lab.model.project import Experiment, ValueReference
 from labfile.model.tree import (
     ReferenceNode,
     LiteralValue as TreeLiteralValue,
 )
+
+from lab.project.model.project import Experiment, ValueReference
+from lab.runtime.model.execution import ScriptExecution
 
 LiteralValue = Union[int, float, str]
 
@@ -90,14 +92,14 @@ class ParameterSet(BaseModel):
 class ExperimentDefinition(Definition):
     """Intermediate representation of an experiment"""
 
-    path: str
+    via: str
     parameters: ParameterSet
 
     @classmethod
     def from_tree(cls, node: ProcessNode) -> "ExperimentDefinition":
         return cls(
             name=node.name,
-            path=node.via,
+            via=node.via,
             parameters=ParameterSet.from_tree(node.parameters),
         )
 
@@ -109,8 +111,14 @@ class ExperimentDefinition(Definition):
             for name, value in self.parameters.values.items()
         }
 
+        # @todo: make this general
+        execution_method = ScriptExecution(command="python", args=[self.via])
+
         return Experiment(
-            id=uuid4(), name=self.name, path=Path(self.path), parameters=parameters
+            id=uuid4(),
+            name=self.name,
+            execution_method=execution_method,
+            parameters=parameters,
         )
 
     def _build_parameter(self, value: Reference, symbols: SymbolTable):

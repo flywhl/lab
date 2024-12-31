@@ -1,12 +1,12 @@
 import typer
 
-from lab.cli.commands import exp, run
+from lab.cli.commands import run, plan
 
 app = typer.Typer()
 
 
 def main():
-    exp.attach(app, name="exp")
+    plan.attach(app, name="plan")
     run.attach(app, name="run")
 
     app()

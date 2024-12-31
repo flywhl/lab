@@ -1,12 +1,13 @@
+from typing import Any, Callable, Optional, Protocol, TypeAlias
 from uuid import UUID
-from typing import Optional, TypeAlias, Union
 
+from pydantic import Field
 from lab.core.model import Model
 from lab.instrument.model.instrument import InstrumentRequirements
 from lab.runtime.model.execution import ExecutionMethod
 
 
-ParameterValue: TypeAlias = Union[str, float, int]
+ParameterValue: TypeAlias = str | float | int
 Parameters: TypeAlias = dict[str, ParameterValue]
 
 
@@ -19,10 +20,10 @@ class Experiment(Model):
     id: UUID
     name: str
 
-    execution_method: ExecutionMethod  # @todo: add local model
+    execution_method: ExecutionMethod
 
     parameters: dict[str, ParameterValue | ValueReference]
-    requirements: Optional[InstrumentRequirements] = None  # @todo: implement
+    requirements: Optional[InstrumentRequirements] = None  # TODO(rory)
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -43,4 +44,4 @@ class Experiment(Model):
 
 
 class Project(Model):
-    experiments: set[Experiment]
+    experiments: set["Experiment"]
