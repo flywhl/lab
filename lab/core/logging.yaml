@@ -16,7 +16,7 @@ handlers:
     backupCount: 5
     encoding: utf8
   
-  null:
+  null_handler:
     class: logging.NullHandler
 
 loggers:
@@ -28,14 +28,14 @@ loggers:
   # Third party loggers
   urllib3:
     level: WARNING
-    handlers: [null]
+    handlers: [null_handler]
     propagate: false
   
   asyncio:
     level: WARNING
-    handlers: [null]
+    handlers: [null_handler]
     propagate: false
 
 root:
   level: WARNING
-  handlers: [null]
+  handlers: [null_handler]
