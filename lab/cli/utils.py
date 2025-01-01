@@ -37,7 +37,7 @@ class AsyncTyper(Typer):
     # noinspection PyShadowingBuiltins
     def callback(
         self,
-        name: str | None = None,
+        # name: str | None = None,
         *,
         cls: type[TyperGroup] | None = None,
         invoke_without_command: bool = False,
@@ -56,8 +56,8 @@ class AsyncTyper(Typer):
         rich_help_panel: str | None = None,
     ) -> Callable[[CommandFunctionType], CommandFunctionType]:
         decorator = super().callback(
-            name=name,
             cls=cls,
+            # name=name,
             invoke_without_command=invoke_without_command,
             no_args_is_help=no_args_is_help,
             subcommand_metavar=subcommand_metavar,
