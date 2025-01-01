@@ -38,4 +38,4 @@ loggers:
 
 root:
   level: WARNING
-  handlers: [file]
+  handlers: [null]
