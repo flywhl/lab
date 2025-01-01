@@ -40,11 +40,15 @@ def setup_logging(log_file: Optional[Path] = None) -> None:
     """Configure application logging from YAML file"""
     if log_file:
         # Ensure log directory exists
+        log_file = log_file.expanduser().resolve()
         log_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Load config file
         config_path = Path(__file__).parent / "logging.yaml"
-        config = yaml.safe_load(config_path.read_text())
+        config = load_logging_config(config_path)
+
+        # Set environment variable for template substitution
+        os.environ["_LOG_FILE_"] = str(log_file)
 
         # Apply configuration
         logging.config.dictConfig(config)
