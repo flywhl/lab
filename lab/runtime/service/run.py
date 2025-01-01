@@ -114,7 +114,10 @@ class RunService:
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
             try:
-                subscriber(event)
+                if isinstance(event, ExperimentRunEvent) and isinstance(subscriber, EventHandler[ExperimentRunEvent]):
+                    subscriber(event)
+                elif isinstance(event, ProjectRunEvent) and isinstance(subscriber, EventHandler[ProjectRunEvent]):
+                    subscriber(event)
             except Exception as e:
                 # Log but don't fail if subscriber errors
                 logger.error(e)
