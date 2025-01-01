@@ -3,8 +3,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from typing import Optional, Sequence
 
+
 class UserInterface:
     """Handles all user interaction and feedback"""
+
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
         self.console = Console()
@@ -17,6 +19,9 @@ class UserInterface:
             TextColumn("[bold blue]{task.description}"),
             console=self.console,
         )
+
+    def print(self, msg: str):
+        self.console.print(msg)
 
     def display_start(self, path: str) -> None:
         """Display initial startup message"""
@@ -38,12 +43,12 @@ class UserInterface:
         table.add_column("Name")
         table.add_column("Status")
         table.add_column("Duration")
-        
+
         for result in results:
             table.add_row(
                 result["name"],
                 f"[green]✓[/]" if result["status"] == "success" else "[red]✗[/]",
-                f"{result['duration']:.2f}s"
+                f"{result['duration']:.2f}s",
             )
-        
+
         self.console.print(table)
