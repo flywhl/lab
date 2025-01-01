@@ -25,7 +25,7 @@ class RunService:
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
-        self._subscribers: list[Callable[[Event], None]] = []
+        self._subscribers: dict[str, list[Callable[[Event], None]]] = {}
 
     async def project_run_started(self, run: ProjectRun) -> None:
         """Start tracking a new pipeline run"""
@@ -99,11 +99,17 @@ class RunService:
         return await self._project_run_repo.list(status, since)
 
     # Event handling
-    def subscribe(self, callback: Callable[[Event], None]) -> None:
-        self._subscribers.append(callback)
+    def subscribe(self, callback: Callable[[Event], None], events: list[str]) -> None:
+        """Subscribe to specific event types"""
+        for event_type in events:
+            if event_type not in self._subscribers:
+                self._subscribers[event_type] = []
+            self._subscribers[event_type].append(callback)
 
     async def _emit_event(self, event: Event) -> None:
-        for subscriber in self._subscribers:
+        """Emit event to subscribers of that event type"""
+        subscribers = self._subscribers.get(event.kind, [])
+        for subscriber in subscribers:
             try:
                 subscriber(event)
             except Exception:
