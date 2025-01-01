@@ -1,5 +1,5 @@
 # src/lab/services/runs.py
-from typing import Callable, Mapping, Optional, Sequence
+from typing import Callable, Mapping, Optional, Sequence, Union
 from datetime import datetime
 from uuid import UUID
 
@@ -22,7 +22,7 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: Mapping[str, Sequence[Callable[[Event], None]]] | None = None,
+        subscribers: Mapping[str, Sequence[Callable[[Union[ProjectRunEvent, ExperimentRunEvent]], None]]] | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
