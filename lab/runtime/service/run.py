@@ -1,8 +1,9 @@
-# src/lab/services/runs.py
 from collections.abc import Mapping
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Generic, Optional, Sequence, TypeVar, Union
 from datetime import datetime
 from uuid import UUID
+
+from typing_extensions import Protocol
 
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
@@ -14,8 +15,10 @@ from lab.runtime.model.run import (
 )
 from lab.runtime.persistence.run import ExperimentRunRepository, ProjectRunRepository
 
-ProjectRunEventHandler = Callable[[ProjectRunEvent], None]
-ExperimentRunEventHandler = Callable[[ExperimentRunEvent], None]
+E = TypeVar('E', bound=Union[ProjectRunEvent, ExperimentRunEvent])
+
+class EventHandler(Protocol, Generic[E]):
+    def __call__(self, event: E) -> None: ...
 
 
 class RunService:
@@ -25,10 +28,7 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: Mapping[
-            str, Sequence[Union[ProjectRunEventHandler, ExperimentRunEventHandler]]
-        ]
-        | None = None,
+        subscribers: Mapping[str, Sequence[EventHandler[Union[ProjectRunEvent, ExperimentRunEvent]]]] | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
@@ -110,7 +110,7 @@ class RunService:
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
             try:
-                subscriber(event)  # type: ignore
+                subscriber(event)
             except Exception:
                 # Log but don't fail if subscriber errors
                 pass
