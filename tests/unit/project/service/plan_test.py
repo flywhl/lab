@@ -16,7 +16,7 @@ def create_experiment(name: str) -> Experiment:
     return Experiment(
         id=uuid4(),
         name=name,
-        execution_method=ScriptExecution(command="echo test"),
+        execution_method=ScriptExecution(command="echo", args=["test"]),
         parameters={}
     )
 
