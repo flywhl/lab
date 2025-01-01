@@ -13,6 +13,7 @@ def plan_service():
 
 
 def create_experiment(name: str) -> Experiment:
+    """Create a test experiment with the given name"""
     return Experiment(
         id=uuid4(),
         name=name,
@@ -21,7 +22,7 @@ def create_experiment(name: str) -> Experiment:
     )
 
 
-def test_creates_plan_for_empty_project(plan_service):
+def test_creates_plan_for_empty_project(plan_service: PlanService) -> None:
     """Should handle empty projects gracefully"""
     project = Project(experiments=set())
     
@@ -32,7 +33,7 @@ def test_creates_plan_for_empty_project(plan_service):
     assert len(plan.ordered_experiments) == 0
 
 
-def test_creates_plan_for_independent_experiments(plan_service):
+def test_creates_plan_for_independent_experiments(plan_service: PlanService) -> None:
     """Should preserve experiments when there are no dependencies"""
     exp1 = create_experiment("exp1")
     exp2 = create_experiment("exp2")
@@ -43,7 +44,7 @@ def test_creates_plan_for_independent_experiments(plan_service):
     assert set(plan.ordered_experiments) == {exp1, exp2}
 
 
-def test_orders_dependent_experiments(plan_service):
+def test_orders_dependent_experiments(plan_service: PlanService) -> None:
     """Should order experiments based on dependencies"""
     exp1 = create_experiment("exp1")
     exp2 = create_experiment("exp2")
@@ -55,7 +56,7 @@ def test_orders_dependent_experiments(plan_service):
     assert plan.ordered_experiments == [exp1, exp2]
 
 
-def test_detects_dependency_cycles(plan_service):
+def test_detects_dependency_cycles(plan_service: PlanService) -> None:
     """Should raise ValueError when dependencies form a cycle"""
     exp1 = create_experiment("exp1")
     exp2 = create_experiment("exp2")
@@ -67,7 +68,7 @@ def test_detects_dependency_cycles(plan_service):
         plan_service.create_execution_plan(project)
 
 
-def test_handles_complex_dependencies(plan_service):
+def test_handles_complex_dependencies(plan_service: PlanService) -> None:
     """Should correctly order experiments with complex dependencies"""
     exp1 = create_experiment("exp1")
     exp2 = create_experiment("exp2")
