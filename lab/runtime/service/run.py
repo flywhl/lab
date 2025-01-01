@@ -105,12 +105,12 @@ class RunService:
     ) -> list[ProjectRun]:
         return await self._project_run_repo.list(status, since)
 
-    async def _emit_event(self, event: ExperimentRunEvent | ProjectRunEvent) -> None:
+    async def _emit_event(self, event: Union[ExperimentRunEvent, ProjectRunEvent]) -> None:
         """Emit event to subscribers of that event type"""
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
             try:
-                subscriber(event)
+                subscriber(event)  # type: ignore
             except Exception:
                 # Log but don't fail if subscriber errors
                 pass
