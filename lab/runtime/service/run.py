@@ -1,10 +1,9 @@
-from collections.abc import Mapping
-from typing import Callable, Generic, Optional, Sequence, TypeVar, Union
+import logging
+from typing import Optional, Sequence, Union, Mapping
 from datetime import datetime
 from uuid import UUID
 
-from typing_extensions import Protocol
-
+from lab.core.model import EventHandler
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
     ExperimentRun,
@@ -15,10 +14,7 @@ from lab.runtime.model.run import (
 )
 from lab.runtime.persistence.run import ExperimentRunRepository, ProjectRunRepository
 
-E = TypeVar('E', bound=Union[ProjectRunEvent, ExperimentRunEvent])
-
-class EventHandler(Protocol, Generic[E]):
-    def __call__(self, event: E) -> None: ...
+logger = logging.getLogger(__name__)
 
 
 class RunService:
@@ -28,7 +24,13 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: Mapping[str, Sequence[EventHandler[Union[ProjectRunEvent, ExperimentRunEvent]]]] | None = None,
+        subscribers: Mapping[
+            str,
+            Sequence[
+                Union[EventHandler[ProjectRunEvent], EventHandler[ExperimentRunEvent]]
+            ],
+        ]
+        | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
@@ -105,12 +107,15 @@ class RunService:
     ) -> list[ProjectRun]:
         return await self._project_run_repo.list(status, since)
 
-    async def _emit_event(self, event: Union[ExperimentRunEvent, ProjectRunEvent]) -> None:
+    async def _emit_event(
+        self, event: Union[ExperimentRunEvent, ProjectRunEvent]
+    ) -> None:
         """Emit event to subscribers of that event type"""
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
             try:
                 subscriber(event)
-            except Exception:
+            except Exception as e:
                 # Log but don't fail if subscriber errors
+                logger.error(e)
                 pass
