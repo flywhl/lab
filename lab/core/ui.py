@@ -37,6 +37,26 @@ class UserInterface:
         """Display success message"""
         self.console.print("[green]✓[/] All experiments completed successfully")
 
+    def render_experiment_started(self, event: "ExperimentRunEvent") -> None:
+        """Display when an experiment starts"""
+        self.console.print(
+            f"[bold blue]►[/] Started experiment: {event.run.experiment.name}"
+        )
+
+    def render_experiment_completed(self, event: "ExperimentRunEvent") -> None:
+        """Display when an experiment completes"""
+        self.console.print(
+            f"[bold green]✓[/] Completed experiment: {event.run.experiment.name}"
+        )
+
+    def render_experiment_failed(self, event: "ExperimentRunEvent") -> None:
+        """Display when an experiment fails"""
+        self.console.print(
+            f"[bold red]✗[/] Failed experiment: {event.run.experiment.name}"
+        )
+        if event.data and "error" in event.data:
+            self.console.print(f"  Error: {event.data['error']}", style="red")
+
     def display_experiment_summary(self, results: Sequence[dict]) -> None:
         """Display summary table of experiment results"""
         table = Table(title="Experiment Results")

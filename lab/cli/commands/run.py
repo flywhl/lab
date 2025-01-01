@@ -30,13 +30,14 @@ async def run(
     setup_logging(log_file)
     ui = UserInterface(verbose=verbose)
 
-    def _render_exp_start(event: ExperimentRunEvent):
-        ui.print(f"Started experiment:\t{event.run.experiment.name}")
-
     run_service = RunService(
         project_run_repo=InMemoryProjectRunRepository(),
         experiment_run_repo=InMemoryExperimentRunRepository(),
-        subscribers={"EXPERIMENT_STARTED": ..., "EXPERIMENT_COMPLETED": ...},
+        subscribers={
+            "EXPERIMENT_STARTED": [ui.render_experiment_started],
+            "EXPERIMENT_COMPLETED": [ui.render_experiment_completed],
+            "EXPERIMENT_FAILED": [ui.render_experiment_failed],
+        },
     )
     runtime = Runtime(run_service=run_service)
 
