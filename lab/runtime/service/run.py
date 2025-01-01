@@ -1,5 +1,5 @@
 # src/lab/services/runs.py
-from typing import Callable, Optional
+from typing import Callable, Mapping, Optional, Sequence
 from datetime import datetime
 from uuid import UUID
 
@@ -22,7 +22,7 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: dict[str, list[Callable[[Event], None]]] | None = None,
+        subscribers: Mapping[str, Sequence[Callable[[Event], None]]] | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
@@ -98,7 +98,6 @@ class RunService:
         self, status: Optional[RunStatus] = None, since: Optional[datetime] = None
     ) -> list[ProjectRun]:
         return await self._project_run_repo.list(status, since)
-
 
     async def _emit_event(self, event: Event) -> None:
         """Emit event to subscribers of that event type"""
