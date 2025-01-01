@@ -1,9 +1,9 @@
 # src/lab/services/runs.py
-from typing import Callable, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping
+from typing import Callable, Optional, Sequence, Union
 from datetime import datetime
 from uuid import UUID
 
-from lab.core.model import Event
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
     ExperimentRun,
@@ -14,6 +14,9 @@ from lab.runtime.model.run import (
 )
 from lab.runtime.persistence.run import ExperimentRunRepository, ProjectRunRepository
 
+ProjectRunEventHandler = Callable[[ProjectRunEvent], None]
+ExperimentRunEventHandler = Callable[[ExperimentRunEvent], None]
+
 
 class RunService:
     """Service for managing experiment runs"""
@@ -22,11 +25,14 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: Mapping[str, Sequence[Callable[[Union[ProjectRunEvent, ExperimentRunEvent]], None]]] | None = None,
+        subscribers: Mapping[
+            str, Sequence[Union[ProjectRunEventHandler, ExperimentRunEventHandler]]
+        ]
+        | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
-        self._subscribers = subscribers or {}
+        self._subscribers = subscribers or Mapping()
 
     async def project_run_started(self, run: ProjectRun) -> None:
         """Start tracking a new pipeline run"""
@@ -99,7 +105,7 @@ class RunService:
     ) -> list[ProjectRun]:
         return await self._project_run_repo.list(status, since)
 
-    async def _emit_event(self, event: Event) -> None:
+    async def _emit_event(self, event: ExperimentRunEvent | ProjectRunEvent) -> None:
         """Emit event to subscribers of that event type"""
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
