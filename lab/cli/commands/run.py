@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Annotated
 import logging
-import typer
+import click
 
 from lab.core.logging import setup_logging
 from lab.core.ui import UserInterface
@@ -17,10 +16,10 @@ from lab.runtime.service.run import RunService
 logger = logging.getLogger("lab")
 
 
-async def run(
-    path: Annotated[Path, typer.Argument(help="Path to Labfile")],
-    verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
-):
+@click.command()
+@click.argument('path', type=click.Path(exists=True, path_type=Path))
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
+async def run(path: Path, verbose: bool = False):
     """Run experiments defined in Labfile"""
     # Set up logging and UI
     setup_logging(Path("~/.local/lab/logs/lab.log"))
