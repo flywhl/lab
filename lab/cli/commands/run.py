@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 import logging
 import typer
 
@@ -24,7 +24,7 @@ async def run(
     """Run experiments defined in Labfile"""
     # Set up logging and UI
     setup_logging(Path("~/.local/lab/logs/lab.log"))
-    ui = UserInterface(verbose=verbose)
+    ui = UserInterface()
 
     run_service = RunService(
         project_run_repo=InMemoryProjectRunRepository(),
@@ -63,7 +63,3 @@ async def run(
         logger.exception("Execution failed")
         ui.display_error(message="Execution failed", details=str(e))
         raise
-
-
-def attach(app: typer.Typer, *, name: str):
-    app.command(name=name)(run)
