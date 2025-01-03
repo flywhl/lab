@@ -3,7 +3,7 @@ from typing import Optional, Sequence, Union, Mapping
 from datetime import datetime
 from uuid import UUID
 
-from lab.core.model import EventHandler
+from lab.core.model import Event, EventHandler
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
     ExperimentRun,
@@ -26,9 +26,7 @@ class RunService:
         experiment_run_repo: ExperimentRunRepository,
         subscribers: Mapping[
             str,
-            Sequence[
-                Union[EventHandler[ProjectRunEvent], EventHandler[ExperimentRunEvent]]
-            ],
+            Sequence[EventHandler[Event]],
         ]
         | None = None,
     ):
@@ -114,10 +112,7 @@ class RunService:
         subscribers = self._subscribers.get(event.kind, [])
         for subscriber in subscribers:
             try:
-                if isinstance(event, ExperimentRunEvent) and isinstance(subscriber, EventHandler[ExperimentRunEvent]):
-                    subscriber(event)
-                elif isinstance(event, ProjectRunEvent) and isinstance(subscriber, EventHandler[ProjectRunEvent]):
-                    subscriber(event)
+                subscriber(event)
             except Exception as e:
                 # Log but don't fail if subscriber errors
                 logger.error(e)

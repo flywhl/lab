@@ -1,7 +1,6 @@
 import json
 import logging.config
 import os
-from string import Template
 import yaml
 from datetime import datetime
 from pathlib import Path
@@ -27,10 +26,8 @@ class JSONFormatter(logging.Formatter):
 def load_logging_config(path: Path) -> dict:
     config_template = path.read_text()
 
-    # Create a custom template with defaults
-    template = Template(config_template)
-    config_str = template.safe_substitute(
-        {"_LOG_FILE_": os.getenv("LOG_FILE", "/var/log/default.log")}
+    config_str = config_template.replace(
+        "_LOG_FILE_", os.getenv("LOG_FILE", "/var/log/default.log")
     )
 
     return yaml.safe_load(config_str)
@@ -43,12 +40,11 @@ def setup_logging(log_file: Optional[Path] = None) -> None:
         log_file = log_file.expanduser().resolve()
         log_file.parent.mkdir(parents=True, exist_ok=True)
 
+        # Set environment variable for template substitution
+        os.environ["LOG_FILE"] = str(log_file)
         # Load config file
         config_path = Path(__file__).parent / "logging.yaml"
         config = load_logging_config(config_path)
-
-        # Set environment variable for template substitution
-        os.environ["_LOG_FILE_"] = str(log_file)
 
         # Apply configuration
         logging.config.dictConfig(config)

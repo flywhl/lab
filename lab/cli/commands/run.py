@@ -7,7 +7,6 @@ from lab.core.logging import setup_logging
 from lab.core.ui import UserInterface
 from lab.project.service.labfile import LabfileService
 from lab.project.service.plan import PlanService
-from lab.runtime.model.run import ExperimentRunEvent
 from lab.runtime.persistence.memory import (
     InMemoryExperimentRunRepository,
     InMemoryProjectRunRepository,
@@ -21,13 +20,10 @@ logger = logging.getLogger("lab")
 async def run(
     path: Annotated[Path, typer.Argument(help="Path to Labfile")],
     verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
-    log_file: Annotated[
-        Optional[Path], typer.Option("--log-file", help="Write logs to file")
-    ] = Path.home() / ".local" / "lab" / "logs" / "lab.log",
 ):
     """Run experiments defined in Labfile"""
     # Set up logging and UI
-    setup_logging(log_file)
+    setup_logging(Path("~/.local/lab/logs/lab.log"))
     ui = UserInterface(verbose=verbose)
 
     run_service = RunService(
@@ -53,14 +49,15 @@ async def run(
         plan_service = PlanService()
         plan = plan_service.create_execution_plan(project)
 
-        # Execute experiments with progress display
-        with ui.create_progress() as progress:
-            task = progress.add_task(
-                "Running experiments...", total=len(plan.ordered_experiments)
-            )
-            results = await runtime.start(plan)
+        await runtime.start(plan)
 
-        # Show results
+        # # Execute experiments with progress display
+        # with ui.create_progress() as progress:
+        #     task = progress.add_task(
+        #         "Running experiments...", total=len(plan.ordered_experiments)
+        #     )
+
+        ui.display_success()
 
     except Exception as e:
         logger.exception("Execution failed")
