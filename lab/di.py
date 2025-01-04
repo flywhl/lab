@@ -2,6 +2,7 @@ from typing import Iterable
 from dishka import Container, Provider, Scope, make_container, provide
 from sqlalchemy import Engine, StaticPool, create_engine
 
+from lab.core.messaging.bus import InMemoryMessageBus, MessageBus
 from lab.core.ui import UserInterface
 from lab.project.service.labfile import LabfileService
 from lab.project.service.plan import PlanService
@@ -48,6 +49,7 @@ class DI:
     def core(self) -> Provider:
         provider = Provider(scope=Scope.APP)
         provider.provide(UserInterface)
+        provider.provide(InMemoryMessageBus, provides=MessageBus)
 
         return provider
 

@@ -3,17 +3,30 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from typing import Optional, Sequence
 
-from lab.core.model import Event
-from lab.runtime.model.run import ExperimentRunEvent
+from lab.core.messaging.bus import MessageBus
+from lab.runtime.messages import (
+    ExperimentRunComplete,
+    ExperimentRunFailed,
+    ExperimentRunStarted,
+)
 
 
 class UserInterface:
     """Handles all user interaction and feedback"""
 
-    def __init__(self):
+    def __init__(self, message_bus: MessageBus):
         self.verbose = False  # @todo: parameterise via injected config
         self.console = Console()
         self.error_console = Console(stderr=True)
+        self._message_bus = message_bus
+
+        self._message_bus.subscribe(
+            ExperimentRunStarted, self.render_experiment_started
+        )
+        self._message_bus.subscribe(
+            ExperimentRunComplete, self.render_experiment_complete
+        )
+        self._message_bus.subscribe(ExperimentRunFailed, self.render_experiment_failed)
 
     def create_progress(self) -> Progress:
         """Create a progress display for long-running operations"""
@@ -40,34 +53,24 @@ class UserInterface:
         """Display success message"""
         self.console.print("[green]✓[/] All experiments completed successfully")
 
-    def render_experiment_started(self, event: Event) -> None:
+    def render_experiment_started(self, message: ExperimentRunStarted) -> None:
         """Display when an experiment starts"""
-        if not isinstance(event, ExperimentRunEvent):
-            # @todo: raise exception?
-            return
         self.console.print(
-            f"[bold blue]►[/] Started experiment: {event.run.experiment.name}"
+            f"[bold blue]►[/] Started experiment: {message.run.experiment.name}"
         )
 
-    def render_experiment_completed(self, event: Event) -> None:
+    def render_experiment_complete(self, message: ExperimentRunComplete) -> None:
         """Display when an experiment completes"""
-        if not isinstance(event, ExperimentRunEvent):
-            # @todo: raise exception?
-            return
         self.console.print(
-            f"[bold green]✓[/] Completed experiment: {event.run.experiment.name}"
+            f"[bold green]✓[/] Completed experiment: {message.run.experiment.name}"
         )
 
-    def render_experiment_failed(self, event: Event) -> None:
+    def render_experiment_failed(self, message: ExperimentRunFailed) -> None:
         """Display when an experiment fails"""
-        if not isinstance(event, ExperimentRunEvent):
-            # @todo: raise exception?
-            return
         self.console.print(
-            f"[bold red]✗[/] Failed experiment: {event.run.experiment.name}"
+            f"[bold red]✗[/] Failed experiment: {message.run.experiment.name}"
         )
-        if event.data and "error" in event.data:
-            self.console.print(f"  Error: {event.data['error']}", style="red")
+        self.console.print(f"  Error: {message.reason}", style="red")
 
     def display_experiment_summary(self, results: Sequence[dict]) -> None:
         """Display summary table of experiment results"""

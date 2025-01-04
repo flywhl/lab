@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from pydantic import Field
 
-from lab.core.model import Event, Model
+from lab.core.model import Model
 from lab.project.model.project import Experiment, Project
 from lab.runtime.model.execution import ExecutionContext
 
@@ -16,18 +16,6 @@ class RunStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-
-
-class ProjectRunEvent(Event):
-    """Event emitted during run execution"""
-
-    run: "ProjectRun"
-
-
-class ExperimentRunEvent(Event):
-    """Event emitted during run execution"""
-
-    run: "ExperimentRun"
 
 
 class ExperimentRun(Model):
