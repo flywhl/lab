@@ -1,18 +1,17 @@
 from pathlib import Path
-from typing import Annotated
 from dishka import FromDishka
 import rich
-import typer
+import click
 
 from lab.core.ui import UserInterface
 from lab.project.service.labfile import LabfileService
 from lab.project.service.plan import PlanService
 
 
-def plan(
-    path: Annotated[Path, typer.Argument(help="Path to Labfile")],
-    ui: FromDishka[UserInterface],
-):
+@click.command()
+@click.argument('path', type=click.Path(exists=True, path_type=Path))
+def plan(path: Path, ui: FromDishka[UserInterface]):
+    """Generate execution plan from Labfile"""
     rich.print(f"Generating plan for [b]{path.resolve()}[/b]\n")
     print(ui)
     labfile_service = LabfileService()
