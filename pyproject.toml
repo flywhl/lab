@@ -16,7 +16,6 @@ dependencies = [
     "pyyaml>=6.0.2",
     "termplotlib>=0.3.9",
     "matplotlib>=3.9.2",
-    "typer>=0.12.5",
     "labfile @ git+https://github.com/flywhl/labfile@main",
     "wireup>=0.12.0",
     "sqlalchemy>=2.0.36",
