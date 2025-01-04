@@ -16,9 +16,8 @@ from lab.runtime.service.run import RunService
 logger = logging.getLogger("lab")
 
 
-@click.command()
-@click.argument('path', type=click.Path(exists=True, path_type=Path))
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
+@click.argument("path", type=click.Path(exists=True, path_type=Path))
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 async def run(path: Path, verbose: bool = False):
     """Run experiments defined in Labfile"""
     # Set up logging and UI

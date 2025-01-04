@@ -10,8 +10,8 @@ from lab.runtime.model.run import ExperimentRunEvent
 class UserInterface:
     """Handles all user interaction and feedback"""
 
-    def __init__(self, verbose: bool = False):
-        self.verbose = verbose
+    def __init__(self):
+        self.verbose = False  # @todo: parameterise via injected config
         self.console = Console()
         self.error_console = Console(stderr=True)
 

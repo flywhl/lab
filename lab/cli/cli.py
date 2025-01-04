@@ -1,17 +1,19 @@
 import click
+from dishka.integrations.click import setup_dishka
 from lab.cli.commands.plan import plan
+
 from lab.cli.commands.run import run
 from lab.di import DI
 
-@click.group()
-def cli():
-    """Lab CLI tool for running experiments"""
-    di = DI()
-    # Setup DI container here if needed
-    pass
 
-cli.add_command(plan)
-cli.add_command(run)
+def start():
+    @click.group()
+    @click.pass_context
+    def main(context: click.Context):
+        di = DI()
+        setup_dishka(container=di.container, context=context, auto_inject=True)
 
-def main():
-    cli()
+    main.command(name="plan")(plan)
+    main.command(name="run")(run)
+
+    main()

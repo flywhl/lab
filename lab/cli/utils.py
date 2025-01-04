@@ -2,9 +2,12 @@ import asyncio
 import inspect
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, ParamSpec, TypeVar, cast
+from typing import Any, Final, ParamSpec, TypeVar, cast
 
-from typer import Typer
+from click import get_current_context
+from dishka import Container
+from dishka.integrations.base import is_dishka_injected, wrap_injection
+from typer import Context, Typer
 from typer.core import TyperCommand, TyperGroup
 from typer.models import CommandFunctionType
 
@@ -107,3 +110,46 @@ class AsyncTyper(Typer):
             rich_help_panel=rich_help_panel,
         )
         return lambda f: self.maybe_run_async(decorator, f)
+
+
+T = TypeVar("T")
+CONTAINER_NAME: Final = "dishka_container"
+
+
+def inject(func: Callable[..., T]) -> Callable[..., T]:
+    return wrap_injection(
+        func=func,
+        container_getter=lambda _, __: get_current_context().meta[CONTAINER_NAME],
+        remove_depends=True,
+        is_async=False,
+    )
+
+
+def _inject_commands(context: Context, app: Typer) -> None:
+    for command in app.registered_commands:
+        if command.callback is None:
+            continue
+        if not is_dishka_injected(command.callback):
+            command.callback = inject(command.callback)
+
+    for group in app.registered_groups:
+        if group.typer_instance is None:
+            continue
+        _inject_commands(context, group.typer_instance)
+
+
+def setup_dishka(
+    container: Container,
+    context: Context,
+    app: Typer,
+    *,
+    finalize_container: bool = True,
+    auto_inject: bool = False,
+) -> None:
+    context.meta[CONTAINER_NAME] = container
+
+    if finalize_container:
+        context.call_on_close(container.close)
+
+    if auto_inject:
+        _inject_commands(context, app)

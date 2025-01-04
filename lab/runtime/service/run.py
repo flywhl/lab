@@ -1,9 +1,8 @@
 import logging
-from typing import Optional, Sequence, Union, Mapping
+from typing import Optional, Union, Mapping
 from datetime import datetime
 from uuid import UUID
 
-from lab.core.model import Event, EventHandler
 from lab.runtime.model.execution import ExecutionContext
 from lab.runtime.model.run import (
     ExperimentRun,
@@ -24,14 +23,15 @@ class RunService:
         self,
         project_run_repo: ProjectRunRepository,
         experiment_run_repo: ExperimentRunRepository,
-        subscribers: Mapping[
-            str,
-            Sequence[EventHandler[Event]],
-        ]
-        | None = None,
+        # subscribers: Mapping[
+        #     str,
+        #     Sequence[EventHandler[Event]],
+        # ]
+        # | None = None,
     ):
         self._project_run_repo = project_run_repo
         self._experiment_run_repo = experiment_run_repo
+        subscribers = None
         self._subscribers = subscribers or Mapping()
 
     async def project_run_started(self, run: ProjectRun) -> None:
