@@ -1,24 +1,53 @@
 from pathlib import Path
-from typing import Annotated
-import rich
-import typer
+import logging
+import click
+from dishka import FromDishka
 
-from lab.service.experiment import ExperimentService
-from lab.service.labfile import LabfileService
-from lab.service.pipeline import PipelineService
+from lab.cli.utils import coro
+from lab.core.logging import setup_logging
+from lab.core.ui import UserInterface
+from lab.project.service.labfile import LabfileService
+from lab.project.service.plan import PlanService
+from lab.runtime.runtime import Runtime
 
-
-def run(path: Annotated[Path, typer.Argument(help="Path to Labfile")]):
-    rich.print(f"Running [b]{path.resolve()}[/b]\n")
-    labfile_service = LabfileService()
-    project = labfile_service.parse(path)
-
-    experiment_service = ExperimentService()
-    pipeline_service = PipelineService(experiment_service=experiment_service)
-
-    pipeline = pipeline_service.create_pipeline(project)
-    pipeline_service.run(pipeline)
+logger = logging.getLogger("lab")
 
 
-def attach(app: typer.Typer, *, name: str):
-    app.command(name=name)(run)
+@click.argument("path", type=click.Path(exists=True, path_type=Path))
+@coro
+async def run(
+    path: Path,
+    ui: FromDishka[UserInterface],
+    runtime: FromDishka[Runtime],
+    labfile_service: FromDishka[LabfileService],
+    plan_service: FromDishka[PlanService],
+):
+    """Run experiments defined in Labfile"""
+    setup_logging(Path("~/.local/lab/logs/lab.log"))
+
+    try:
+        ui.display_start(str(path.resolve()))
+
+        # Load and parse project
+        logger.debug("Loading project", extra={"context": {"path": str(path)}})
+        labfile_service = LabfileService()
+        project = labfile_service.parse(path)
+
+        # Create execution plan
+        plan_service = PlanService()
+        plan = plan_service.create_execution_plan(project)
+
+        await runtime.start(plan)
+
+        # # Execute experiments with progress display
+        # with ui.create_progress() as progress:
+        #     task = progress.add_task(
+        #         "Running experiments...", total=len(plan.ordered_experiments)
+        #     )
+
+        ui.display_success()
+
+    except Exception as e:
+        logger.exception("Execution failed")
+        ui.display_error(message="Execution failed", details=str(e))
+        raise

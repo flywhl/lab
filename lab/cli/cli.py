@@ -1,12 +1,19 @@
-import typer
+import click
+from dishka.integrations.click import setup_dishka
+from lab.cli.commands.plan import plan
 
-from lab.cli.commands import exp, run
+from lab.cli.commands.run import run
+from lab.di import DI
 
-app = typer.Typer()
 
+def start():
+    @click.group()
+    @click.pass_context
+    def main(context: click.Context):
+        di = DI()
+        setup_dishka(container=di.container, context=context, auto_inject=True)
 
-def main():
-    exp.attach(app, name="exp")
-    run.attach(app, name="run")
+    main.command(name="plan")(plan)
+    main.command(name="run")(run)
 
-    app()
+    main()

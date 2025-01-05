@@ -1,6 +1,3 @@
-USE PROVIDER torch
-
-
 EXPERIMENT SimulateReach AS single_reach
     VIA exp2.py
     WITH

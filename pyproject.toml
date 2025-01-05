@@ -16,22 +16,23 @@ dependencies = [
     "pyyaml>=6.0.2",
     "termplotlib>=0.3.9",
     "matplotlib>=3.9.2",
-    "typer>=0.12.5",
-    "labfile @ git+https://github.com/flywheelhq/labfile@dev",
+    "labfile @ git+https://github.com/flywhl/labfile@main",
     "wireup>=0.12.0",
+    "sqlalchemy>=2.0.36",
+    "dishka>=1.4.2",
+    "click>=8.1.8",
 ]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.scripts]
-lab = "lab.cli.cli:main"
+lab = "lab.cli.cli:start"
 
-[tool.rye]
-managed = true
+[tool.uv]
 dev-dependencies = [
     "coverage>=7.6.7",
     "pre-commit>=4.0.1",
@@ -44,6 +45,3 @@ dev-dependencies = [
 
 [tool.hatch.metadata]
 allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["lab"]
